@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 
+// সকল অরিজিন থেকে এক্সেস দেওয়ার জন্য (Firebase ফ্রন্টএন্ডের জন্য জরুরি)
 app.use(cors()); 
 app.use(express.json());
 
@@ -156,13 +157,20 @@ app.get('/admin/stats', (req, res) => {
 // ১. রিঅ্যাক্ট বিল্ড ফোল্ডার কানেক্ট করা
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-// ২. ফ্রন্টএন্ড রুট হ্যান্ডেল করা (Express 5 এর এরর এড়াতে মিডলওয়্যার ব্যবহার করা হয়েছে)
-app.use((req, res) => {
+// ২. ফ্রন্টএন্ড রুট হ্যান্ডেল করা (Firebase-এর জন্য API চেক রুট যোগ করা হয়েছে)
+// কোনো রুট না মিললে এটি এপিআই রানিং কি না তা চেক করবে
+app.get('/', (req, res) => {
+    res.send("Backend API is running. Connect your Firebase frontend here.");
+});
+
+// Express 5 এর এরর এড়াতে ওয়াইল্ডকার্ডের পরিবর্তে এই মিডলওয়্যারটি ব্যবহার করা হয়েছে
+app.use((req, res, next) => {
     const indexPath = path.join(__dirname, 'client/build', 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        res.status(404).send("Frontend build not found! Make sure you have run 'npm run build' in the client folder.");
+        // যদি বিল্ড ফোল্ডার না থাকে, তবে ৪০৪ না দিয়ে একটি মেসেজ দিবে
+        next();
     }
 });
 
