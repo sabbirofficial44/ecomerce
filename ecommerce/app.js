@@ -22,9 +22,9 @@ const writeData = (file, data) => fs.writeFileSync(file, JSON.stringify(data, nu
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'tempmail2071@gmail.com',
-        pass: 'vaox seep gxtd ovnt' 
-    }
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    } 
 });
 
 const otpStore = {};
@@ -171,3 +171,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
+
