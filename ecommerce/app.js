@@ -157,7 +157,7 @@ app.get('/admin/stats', (req, res) => {
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 // ২. ফ্রন্টএন্ড রুট হ্যান্ডেল করা
-app.get('*', (req, res) => {
+app.use((req, res, next) => {
     const indexPath = path.join(__dirname, 'client/build', 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
@@ -172,4 +172,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => 
   console.log(`Server running on port ${PORT}`)
 );
+
 
