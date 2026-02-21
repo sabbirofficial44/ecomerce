@@ -151,13 +151,14 @@ app.get('/admin/stats', (req, res) => {
     res.json({ totalUsers: users.length, totalProducts: products.length, totalOrders: orders.length, totalRevenue });
 });
 
-// --- হোস্টিংয়ের জন্য প্রয়োজনীয় অংশ (Charity changes) ---
+// --- হোস্টিংয়ের জন্য প্রয়োজনীয় অংশ (Charity changes) ---
 
 // ১. রিঅ্যাক্ট বিল্ড ফোল্ডার কানেক্ট করা
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 // ২. ফ্রন্টএন্ড রুট হ্যান্ডেল করা
-app.get('*', (req, res) => {
+// এখানে '*' এর পরিবর্তে '/*' দেওয়া হয়েছে (Express 5 এর জন্য)
+app.get('/*', (req, res) => {
     const indexPath = path.join(__dirname, 'client/build', 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
