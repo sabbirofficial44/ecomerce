@@ -3,7 +3,8 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
-
+const buildPath = path.join(__dirname, 'client/build');
+app.use(express.static(buildPath));
 const app = express();
 
 // সকল অরিজিন থেকে এক্সেস দেওয়ার জন্য (Firebase ফ্রন্টএন্ডের জন্য জরুরি)
@@ -103,7 +104,7 @@ app.post('/reset-password', (req, res) => {
 });
 
 // প্রোডাক্টস ও অন্যান্য API
-app.get('/products', (req, res) => res.json(readData(DB_PATH)));
+('/products', (req, res) => res.json(readData(DB_PATH)));
 
 app.post('/add-product', (req, res) => {
     const products = readData(DB_PATH);
@@ -159,8 +160,13 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 // ২. ফ্রন্টএন্ড রুট হ্যান্ডেল করা (Firebase-এর জন্য API চেক রুট যোগ করা হয়েছে)
 // কোনো রুট না মিললে এটি এপিআই রানিং কি না তা চেক করবে
-app.get('/', (req, res) => {
-    res.send("Backend API is running. Connect your Firebase frontend here.");
+app.get('*', (req, res) => {
+    const indexPath = path.join(buildPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).send("Frontend build not found. Please run 'npm run build' in client folder.");
+    }
 });
 
 // Express 5 এর এরর এড়াতে ওয়াইল্ডকার্ডের পরিবর্তে এই মিডলওয়্যারটি ব্যবহার করা হয়েছে
@@ -179,3 +185,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
+
