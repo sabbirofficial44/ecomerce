@@ -22,16 +22,13 @@ const writeData = (file, data) => fs.writeFileSync(file, JSON.stringify(data, nu
 
 // ১. ইমেইল পাঠানোর ট্রান্সপোর্টার সেটআপ (আপনার জিমেইল ব্যবহার করে)
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // SSL ব্যবহার করার জন্য true
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false // এটি রেন্ডারের মতো সার্ভারে কানেকশন ব্লক হওয়া আটকাবে
-    }
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // true for 465, false for other ports
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS 
+    }
 });
 
 // OTP সাময়িকভাবে সেভ রাখার জন্য একটি অবজেক্ট
@@ -211,6 +208,4 @@ resend.emails.send({
   to: 'tempmail2071@gmail.com',
   subject: 'Hello World',
   html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
-});
-
-
+}); 
