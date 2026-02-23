@@ -3,12 +3,14 @@ require('dotenv').config();
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const nodemailer = require('nodemailer'); // নতুন যোগ করা হয়েছে
+const { Resend } = require('resend'); // Nodemailer সরিয়ে Resend আনা হয়েছে
 
 const app = express();
 
 app.use(cors()); 
 app.use(express.json());
+
+const resend = new Resend('re_Ybb2ZR12_6nWZP6Q3s9h86bhW26xmzjMh'); // আপনার দেওয়া API Key
 
 const DB_PATH = path.join(__dirname, 'products.json');
 const USER_PATH = path.join(__dirname, 'users.json');
@@ -19,17 +21,6 @@ const readData = (file) => {
     return JSON.parse(fs.readFileSync(file));
 };
 const writeData = (file, data) => fs.writeFileSync(file, JSON.stringify(data, null, 2));
-
-// ১. ইমেইল পাঠানোর ট্রান্সপোর্টার সেটআপ (আপনার জিমেইল ব্যবহার করে)
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // true for 465, false for other ports
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS 
-    }
-});
 
 // OTP সাময়িকভাবে সেভ রাখার জন্য একটি অবজেক্ট
 const otpStore = {};
@@ -58,36 +49,33 @@ app.post('/login', (req, res) => {
     }
 });
 
-// ১. OTP পাঠানোর API (Forgot Password - এখন সরাসরি ইমেইল যাবে)
-app.post('/forgot-password', (req, res) => {
+// ১. OTP পাঠানোর API (Forgot Password - এখন Resend দিয়ে ইমেইল যাবে)
+app.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     let users = readData(USER_PATH);
     
     const userExists = users.find(u => u.email === email);
     
     if (userExists) {
-        // ৬ ডিজিটের একটি র‍্যান্ডম OTP তৈরি
         const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
         otpStore[email] = otp;
         
-        // ইমেইল পাঠানোর অপশন
-        const mailOptions = {
-            from: 'tempmail2071@gmail.com',
-            to: email,
-            subject: 'Your Password Reset OTP',
-            text: `Your OTP for password reset is: ${otp}. Do not share this with anyone.`
-        };
+        try {
+            // Resend দিয়ে ইমেইল পাঠানো হচ্ছে
+            const data = await resend.emails.send({
+                from: 'onboarding@resend.dev', // আপনার ডোমেইন ভেরিফাই না করা পর্যন্ত এটিই থাকবে
+                to: email,
+                subject: 'Your Password Reset OTP',
+                html: `<p>Your OTP for password reset is: <strong>${otp}</strong>. Do not share this with anyone.</p>`
+            });
 
-        // ইমেইল পাঠানো হচ্ছে
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-                return res.status(500).json({ success: false, message: "Failed to send email!" });
-            } else {
-                console.log('Email sent: ' + info.response);
-                res.json({ success: true, message: "OTP sent to your email!" });
-            }
-        });
+            console.log('Email sent successfully:', data);
+            res.json({ success: true, message: "OTP sent to your email!" });
+            
+        } catch (error) {
+            console.error('Resend Error:', error);
+            return res.status(500).json({ success: false, message: "Failed to send email!" });
+        }
         
     } else {
         res.status(404).json({ success: false, message: "User not found with this email!" });
@@ -99,13 +87,12 @@ app.post('/reset-password', (req, res) => {
     const { email, otp, newPassword } = req.body;
     let users = readData(USER_PATH);
     
-    // OTP মিলছে কিনা চেক করা হচ্ছে
     if (otpStore[email] && otpStore[email] === otp) {
         const userIndex = users.findIndex(u => u.email === email);
         if (userIndex !== -1) {
-            users[userIndex].password = newPassword; // পাসওয়ার্ড আপডেট
+            users[userIndex].password = newPassword; 
             writeData(USER_PATH, users);
-            delete otpStore[email]; // কাজ শেষ, তাই OTP ডিলিট করে দিলাম
+            delete otpStore[email]; 
             res.json({ success: true, message: "Password updated successfully!" });
         } else {
             res.status(404).json({ success: false, message: "User not found!" });
@@ -121,8 +108,6 @@ app.post('/user/sync', (req, res) => {
 });
 
 // প্রোডাক্টস
-app.get('/products', (req, res) => res.json(readData(DB_PATH)));
-
 app.get('/products', (req, res) => res.json(readData(DB_PATH)));
 
 app.post('/add-product', (req, res) => {
@@ -195,7 +180,4 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => 
   console.log(`Server running on port ${PORT}`)
-
 );
-
-
