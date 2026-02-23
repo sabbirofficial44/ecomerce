@@ -1,8 +1,9 @@
 const express = require('express');
+require('dotenv').config();
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer'); // নতুন যোগ করা হয়েছে
 
 const app = express();
 
@@ -19,14 +20,16 @@ const readData = (file) => {
 };
 const writeData = (file, data) => fs.writeFileSync(file, JSON.stringify(data, null, 2));
 
+// ১. ইমেইল পাঠানোর ট্রান্সপোর্টার সেটআপ (আপনার জিমেইল ব্যবহার করে)
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    } 
+        user: 'tempmail2071@gmail.com',
+        pass: 'vaox seep gxtd ovnt' // আপনার অ্যাপ পাসওয়ার্ড
+    }
 });
 
+// OTP সাময়িকভাবে সেভ রাখার জন্য একটি অবজেক্ট
 const otpStore = {};
 
 // রেজিস্ট্রেশন
@@ -53,46 +56,55 @@ app.post('/login', (req, res) => {
     }
 });
 
-// OTP পাঠানো
+// ১. OTP পাঠানোর API (Forgot Password - এখন সরাসরি ইমেইল যাবে)
 app.post('/forgot-password', (req, res) => {
     const { email } = req.body;
     let users = readData(USER_PATH);
+    
     const userExists = users.find(u => u.email === email);
     
     if (userExists) {
+        // ৬ ডিজিটের একটি র‍্যান্ডম OTP তৈরি
         const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
         otpStore[email] = otp;
         
+        // ইমেইল পাঠানোর অপশন
         const mailOptions = {
             from: 'tempmail2071@gmail.com',
             to: email,
             subject: 'Your Password Reset OTP',
-            text: `Your OTP for password reset is: ${otp}.`
+            text: `Your OTP for password reset is: ${otp}. Do not share this with anyone.`
         };
 
+        // ইমেইল পাঠানো হচ্ছে
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
+                console.log(error);
                 return res.status(500).json({ success: false, message: "Failed to send email!" });
             } else {
+                console.log('Email sent: ' + info.response);
                 res.json({ success: true, message: "OTP sent to your email!" });
             }
         });
+        
     } else {
-        res.status(404).json({ success: false, message: "User not found!" });
+        res.status(404).json({ success: false, message: "User not found with this email!" });
     }
 });
 
-// পাসওয়ার্ড রিসেট
+// ২. পাসওয়ার্ড রিসেট করার API (OTP ভেরিফাই করে)
 app.post('/reset-password', (req, res) => {
     const { email, otp, newPassword } = req.body;
     let users = readData(USER_PATH);
+    
+    // OTP মিলছে কিনা চেক করা হচ্ছে
     if (otpStore[email] && otpStore[email] === otp) {
         const userIndex = users.findIndex(u => u.email === email);
         if (userIndex !== -1) {
-            users[userIndex].password = newPassword;
+            users[userIndex].password = newPassword; // পাসওয়ার্ড আপডেট
             writeData(USER_PATH, users);
-            delete otpStore[email];
-            res.json({ success: true, message: "Password updated!" });
+            delete otpStore[email]; // কাজ শেষ, তাই OTP ডিলিট করে দিলাম
+            res.json({ success: true, message: "Password updated successfully!" });
         } else {
             res.status(404).json({ success: false, message: "User not found!" });
         }
@@ -101,7 +113,12 @@ app.post('/reset-password', (req, res) => {
     }
 });
 
-// প্রোডাক্টস ও অন্যান্য API
+// ইউজার সিঙ্ক 
+app.post('/user/sync', (req, res) => {
+    res.json({ success: true });
+});
+
+// প্রোডাক্টস
 app.get('/products', (req, res) => res.json(readData(DB_PATH)));
 
 app.post('/add-product', (req, res) => {
@@ -112,6 +129,7 @@ app.post('/add-product', (req, res) => {
     res.json({ success: true, product: newProduct }); 
 });
 
+// প্রোডাক্ট ডিলিট API
 app.delete('/delete-product/:id', (req, res) => {
     let products = readData(DB_PATH);
     const idToDelete = parseInt(req.params.id);
@@ -120,22 +138,33 @@ app.delete('/delete-product/:id', (req, res) => {
     res.json({ success: true });
 });
 
+// অর্ডার প্লেস করা
 app.post('/place-order', (req, res) => {
     const orders = readData(ORDER_PATH);
-    const newOrder = { id: 'ORD-' + Date.now(), date: new Date().toISOString(), status: 'Pending', ...req.body };
+    const newOrder = {
+        id: 'ORD-' + Date.now(),
+        date: new Date().toISOString(),
+        status: 'Pending',
+        ...req.body
+    };
     orders.push(newOrder);
     writeData(ORDER_PATH, orders);
     res.json({ success: true, order: newOrder });
 });
 
-app.get('/admin/orders', (req, res) => res.json(readData(ORDER_PATH)));
+// অ্যাডমিন প্যানেলে অর্ডার শো করানো
+app.get('/admin/orders', (req, res) => {
+    res.json(readData(ORDER_PATH));
+});
 
+// ইউজারের মাই অর্ডার পেজে অর্ডার শো করানো
 app.get('/user/orders/:email', (req, res) => {
     const orders = readData(ORDER_PATH);
     const userOrders = orders.filter(o => o.userEmail === req.params.email);
     res.json(userOrders);
 });
 
+// অ্যাডমিন প্যানেল থেকে অর্ডার স্ট্যাটাস আপডেট করা
 app.put('/admin/update-order/:id', (req, res) => {
     let orders = readData(ORDER_PATH);
     orders = orders.map(o => o.id === req.params.id ? { ...o, status: req.body.status } : o);
@@ -143,33 +172,23 @@ app.put('/admin/update-order/:id', (req, res) => {
     res.json({ success: true });
 });
 
+// অ্যাডমিন ড্যাশবোর্ডের স্ট্যাটিস্টিক্স
 app.get('/admin/stats', (req, res) => {
     const users = readData(USER_PATH);
     const products = readData(DB_PATH);
     const orders = readData(ORDER_PATH);
     const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
-    res.json({ totalUsers: users.length, totalProducts: products.length, totalOrders: orders.length, totalRevenue });
+    
+    res.json({
+        totalUsers: users.length,
+        totalProducts: products.length,
+        totalOrders: orders.length,
+        totalRevenue: totalRevenue
+    });
 });
 
-// --- হোস্টিংয়ের জন্য প্রয়োজনীয় অংশ (Charity changes) ---
-
-// ১. রিঅ্যাক্ট বিল্ড ফোল্ডার কানেক্ট করা
-app.use(express.static(path.join(__dirname, 'client/build')));
-
-// ২. ফ্রন্টএন্ড রুট হ্যান্ডেল করা
-app.use((req, res, next) => {
-    const indexPath = path.join(__dirname, 'client/build', 'index.html');
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.status(404).send("Frontend build not found!");
-    }
-});
-
-// ৩. পোর্ট সেটিংস (Render এর জন্য process.env.PORT)
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => 
   console.log(`Server running on port ${PORT}`)
 );
-
