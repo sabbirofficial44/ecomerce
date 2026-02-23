@@ -210,4 +210,3 @@ resend.emails.send({
   html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
 });
 
-ey ta nodemailer er poribotte set kore deu diea full code deu er baire kisu remove koiro na..
