@@ -22,10 +22,12 @@ const writeData = (file, data) => fs.writeFileSync(file, JSON.stringify(data, nu
 
 // ১. ইমেইল পাঠানোর ট্রান্সপোর্টার সেটআপ (আপনার জিমেইল ব্যবহার করে)
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // true for 465, false for other ports
     auth: {
-        user: process.env.EMAIL_USER, // এনভায়রনমেন্ট ভেরিয়েবল
-        pass: process.env.EMAIL_PASS  // এনভায়রনমেন্ট ভেরিয়েবল
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS 
     }
 });
 
@@ -123,11 +125,6 @@ app.get('/products', (req, res) => res.json(readData(DB_PATH)));
 
 app.get('/products', (req, res) => res.json(readData(DB_PATH)));
 
-app.get('/categories', (req, res) => {
-    const categories = ['Home', 'Cloth', 'Gadget', 'Book'];
-    res.json(categories);
-});
-
 app.post('/add-product', (req, res) => {
     const products = readData(DB_PATH);
     const newProduct = { ...req.body, id: Date.now() };
@@ -200,4 +197,5 @@ app.listen(PORT, () =>
   console.log(`Server running on port ${PORT}`)
 
 );
+
 
