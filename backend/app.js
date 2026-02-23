@@ -121,6 +121,13 @@ app.post('/user/sync', (req, res) => {
 // প্রোডাক্টস
 app.get('/products', (req, res) => res.json(readData(DB_PATH)));
 
+app.get('/products', (req, res) => res.json(readData(DB_PATH)));
+
+app.get('/categories', (req, res) => {
+    const categories = ['Home', 'Cloth', 'Gadget', 'Book'];
+    res.json(categories);
+});
+
 app.post('/add-product', (req, res) => {
     const products = readData(DB_PATH);
     const newProduct = { ...req.body, id: Date.now() };
@@ -193,3 +200,4 @@ app.listen(PORT, () =>
   console.log(`Server running on port ${PORT}`)
 
 );
+
