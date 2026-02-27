@@ -3,27 +3,36 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const multer = require('multer');
+const admin = require('firebase-admin');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// No need to serve static uploads if using Firebase
 
-const multer = require('multer');
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'uploads');
-        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage });
+// Initialize Firebase Admin
+let serviceAccount;
+try {
+    serviceAccount = require('./serviceAccountKey.json');
+} catch (e) {
+    console.warn('serviceAccountKey.json not found. Firebase Storage will not work.');
+    serviceAccount = null;
+}
 
+if (serviceAccount) {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'e-commerce-shop-site.firebasestorage.app'
+    });
+} else {
+    console.warn('Firebase Admin not initialized. Uploads will fail.');
+}
+
+const bucket = admin.storage ? admin.storage().bucket() : null;
+
+// File paths
 const SETTINGS_PATH = path.join(__dirname, 'settings.json');
 const CAT_PATH = path.join(__dirname, 'categories.json');
 const DB_PATH = path.join(__dirname, 'products.json');
@@ -136,7 +145,7 @@ app.post('/reset-password', (req, res) => {
 
 app.post('/user/sync', (req, res) => res.json({ success: true }));
 
-// ==================== PRODUCT ROUTES (with discount & stock) ====================
+// ==================== PRODUCT ROUTES ====================
 app.get('/products', (req, res) => res.json(readData(DB_PATH)));
 
 app.post('/add-product', (req, res) => {
@@ -165,7 +174,6 @@ app.put('/edit-product/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const index = products.findIndex(p => p.id === id);
     if (index !== -1) {
-        // নিশ্চিত করা যে type ও sizes আপডেট হচ্ছে
         products[index] = {
             ...products[index],
             ...req.body,
@@ -212,9 +220,9 @@ app.post('/place-order', (req, res) => {
         date: new Date().toISOString(),
         status: 'Pending',
         userEmail: req.body.userEmail,
-        userName: req.body.userName,           // নতুন
-        userPhone: req.body.userPhone,         // নতুন
-        userAddress: req.body.userAddress,     // নতুন
+        userName: req.body.userName,
+        userPhone: req.body.userPhone,
+        userAddress: req.body.userAddress,
         items: req.body.items,
         total: req.body.total,
         paymentMethod: req.body.paymentMethod
@@ -222,7 +230,6 @@ app.post('/place-order', (req, res) => {
     orders.push(newOrder);
     writeData(ORDER_PATH, orders);
 
-    // Update user order count
     let users = readData(USER_PATH);
     const userIndex = users.findIndex(u => u.email === req.body.userEmail);
     if (userIndex !== -1) {
@@ -463,11 +470,30 @@ app.post('/google-login', (req, res) => {
     res.json({ success: true, user: safeUser });
 });
 
-// ==================== UPLOAD ====================
-app.post('/upload', upload.single('image'), (req, res) => {
+// ==================== UPLOAD to Firebase Storage ====================
+const upload = multer({ storage: multer.memoryStorage() });
+
+app.post('/upload', upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-    const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
-    res.json({ success: true, imageUrl });
+    if (!bucket) return res.status(500).json({ success: false, message: 'Firebase Storage not configured' });
+
+    try {
+        const fileName = `products/${Date.now()}_${req.file.originalname}`;
+        const file = bucket.file(fileName);
+
+        await file.save(req.file.buffer, {
+            metadata: { contentType: req.file.mimetype }
+        });
+
+        await file.makePublic();
+
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+        res.json({ success: true, imageUrl: publicUrl });
+    } catch (error) {
+        console.error('Firebase upload error:', error);
+        res.status(500).json({ success: false, message: 'Upload failed' });
+    }
 });
 
 // ==================== SERVER ====================
