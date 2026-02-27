@@ -38,7 +38,7 @@ const CAT_PATH = path.join(__dirname, 'categories.json');
 const DB_PATH = path.join(__dirname, 'products.json');
 const USER_PATH = path.join(__dirname, 'users.json');
 const ORDER_PATH = path.join(__dirname, 'orders.json');
-
+const serviceAccount = require('./e-commerce-shop-site-firebase-adminsdk-fbsvc-6436ab9877.json');
 const readData = (file) => {
     if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify([]));
     return JSON.parse(fs.readFileSync(file));
@@ -499,3 +499,4 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 // ==================== SERVER ====================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
