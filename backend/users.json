@@ -1,0 +1,151 @@
+[
+  {
+    "name": "SABBIR",
+    "email": "sabbirmolla801@gmail.com",
+    "password": "xx",
+    "role": "admin",
+    "orderCount": 9,
+    "loginCount": 22,
+    "lastLogin": "2026-02-27T20:39:22.702Z",
+    "profilePicture": "http://localhost:5000/uploads/image-1772220599761-179746241.jpg",
+    "defaultAddress": "AZIMPUR",
+    "defaultPhone": "01775113977"
+  },
+  {
+    "name": "ss",
+    "email": "sabbirmolla0742@gmail.com",
+    "password": "xx",
+    "role": "user"
+  },
+  {
+    "name": "ad",
+    "email": "admin@gmail.com",
+    "password": "SABBIR@99",
+    "role": "admin"
+  },
+  {
+    "name": "Admin",
+    "email": "admin1@gmail.com",
+    "password": "admin",
+    "role": "user"
+  },
+  {
+    "name": "d",
+    "email": "d@gmail.com",
+    "password": "xx",
+    "role": "user"
+  },
+  {
+    "name": "SABBIR MOLLA",
+    "email": "sabbirmolla802@gmail.com",
+    "password": "xx",
+    "role": "user",
+    "loginCount": 9,
+    "lastLogin": "2026-02-27T18:14:28.716Z",
+    "profilePicture": "http://localhost:5000/uploads/image-1772219149668-393870643.jpg",
+    "defaultAddress": "",
+    "defaultPhone": ""
+  },
+  {
+    "name": "d",
+    "email": "sabbirmolla8041@gmail.com",
+    "password": "xx",
+    "role": "user"
+  },
+  {
+    "name": "SABBIR MOLLA",
+    "email": "sabbirmolla072@gmail.com",
+    "password": "sdf",
+    "role": "user",
+    "loginCount": 2,
+    "lastLogin": "2026-02-27T14:54:00.036Z",
+    "profilePicture": "http://localhost:5000/uploads/image-1772203975474-98355034.png",
+    "defaultAddress": "Muksudpur Gopalganj",
+    "defaultPhone": "0147545455",
+    "orderCount": 1
+  },
+  {
+    "name": "d",
+    "email": "sabbirmolla0472@gmail.com",
+    "password": "d",
+    "role": "user"
+  },
+  {
+    "name": "4",
+    "email": "sabbirmolla8014@gmail.com",
+    "password": "4",
+    "role": "user"
+  },
+  {
+    "name": "x",
+    "email": "sabbirmolla8013@gmail.com",
+    "password": "x",
+    "role": "user"
+  },
+  {
+    "name": "t",
+    "email": "t@gmail.com",
+    "password": "xx",
+    "role": "user"
+  },
+  {
+    "name": "Temp Mail",
+    "email": "tempmail2071@gmail.com",
+    "password": "",
+    "role": "user",
+    "loginCount": 2,
+    "lastLogin": "2026-02-27T17:09:35.028Z",
+    "orderCount": 0,
+    "profilePicture": "http://localhost:5000/uploads/image-1772192611286-671280175.png",
+    "defaultAddress": "",
+    "defaultPhone": ""
+  },
+  {
+    "name": "SATHI",
+    "email": "kuttukutti88@gmail.com",
+    "password": "",
+    "role": "user",
+    "loginCount": 1,
+    "lastLogin": "2026-02-27T11:43:48.938Z",
+    "orderCount": 0,
+    "profilePicture": "http://localhost:5000/uploads/image-1772192668071-683126930.jpg",
+    "defaultAddress": "DHAKA",
+    "defaultPhone": "46464"
+  },
+  {
+    "name": "SABBIR MOLLA",
+    "email": "sabbirmolla4801@gmail.com",
+    "password": "xx",
+    "role": "user",
+    "loginCount": 1,
+    "lastLogin": "2026-02-27T12:53:27.827Z",
+    "orderCount": 1,
+    "profilePicture": "http://localhost:5000/uploads/image-1772196839941-541524358.jpg",
+    "defaultAddress": "d",
+    "defaultPhone": "d"
+  },
+  {
+    "name": "Sabbir Molla",
+    "email": "sabbirmolla195@gmail.com",
+    "password": "",
+    "role": "user",
+    "loginCount": 1,
+    "lastLogin": "2026-02-27T13:05:38.403Z",
+    "orderCount": 0,
+    "profilePicture": "http://localhost:5000/uploads/image-1772197557675-264139773.jpg",
+    "defaultAddress": "",
+    "defaultPhone": ""
+  },
+  {
+    "name": "sabb",
+    "email": "ss@gmail.com",
+    "password": "s",
+    "role": "user",
+    "loginCount": 2,
+    "lastLogin": "2026-02-27T20:35:15.259Z",
+    "orderCount": 0,
+    "profilePicture": "http://localhost:5000/uploads/image-1772224466156-56119963.png",
+    "defaultAddress": "",
+    "defaultPhone": ""
+  }
+]

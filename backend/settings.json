@@ -1,0 +1,54 @@
+{
+  "siteName": "NoboDeal",
+  "logoUrl": "",
+  "primaryColor": "#00bfff",
+  "heroBanner": {
+    "image": "https://picsum.photos/id/1015/1200/400",
+    "title": "Big Summer Sale is Live!",
+    "subtitle": "Up to 70% OFF on Fashion & Gadgets",
+    "buttonText": "Shop Now"
+  },
+  "heroSlides": [
+    {
+      "image": "https://picsum.photos/id/1015/1200/600",
+      "title": "Big Summer Sale",
+      "subtitle": "Up to 70% OFF on Everything",
+      "buttonText": "Shop Now"
+    },
+    {
+      "image": "https://picsum.photos/id/201/1200/600",
+      "title": "New Gadgets Arrived",
+      "subtitle": "Latest Smartphones & Laptops",
+      "buttonText": "Explore Now"
+    },
+    {
+      "image": "https://picsum.photos/id/301/1200/600",
+      "title": "Book Festival 2026",
+      "subtitle": "Huge Discount on All Books",
+      "buttonText": "Browse Books"
+    }
+  ],
+  "footerLinks": {
+    "about": "About Us",
+    "contact": "Contact",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "footerText": "© 2026 NoboDeal - Made with ❤️ in Bangladesh",
+  "navbarMaxVisible": 3,
+  "featuredProductIds": [
+    1771624133866,
+    1771625140325,
+    1771626346881,
+    1771602705852,
+    1771638205179,
+    1771637487330
+  ],
+  "sliderAutoPlay": true,
+  "sliderInterval": 4500,
+  "sliderShowArrows": true,
+  "sliderShowDots": true,
+  "darkMode": false,
+  "currencySymbol": "ss",
+  "secondaryColor": "#ff00f7"
+}
