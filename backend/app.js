@@ -7,45 +7,36 @@ const multer = require('multer');
 const admin = require('firebase-admin');
 require('dotenv').config();
 
+// ==================== FIREBASE ADMIN INIT ====================
+const serviceAccount = require('./e-commerce-shop-site-firebase-adminsdk-fbsvc-6436ab9877.json'); // your actual filename
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'e-commerce-shop-site.firebasestorage.app'
+});
+const bucket = admin.storage().bucket();
+
 const app = express();
 app.use(cors());
 app.use(express.json());
-// No need to serve static uploads if using Firebase
 
-// Initialize Firebase Admin
-let serviceAccount;
-try {
-    serviceAccount = require('./serviceAccountKey.json');
-} catch (e) {
-    console.warn('serviceAccountKey.json not found. Firebase Storage will not work.');
-    serviceAccount = null;
-}
+// ==================== MULTER (memory storage) ====================
+const upload = multer({ storage: multer.memoryStorage() });
 
-if (serviceAccount) {
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'e-commerce-shop-site.firebasestorage.app'
-    });
-} else {
-    console.warn('Firebase Admin not initialized. Uploads will fail.');
-}
-
-const bucket = admin.storage ? admin.storage().bucket() : null;
-
-// File paths
+// ==================== JSON FILE PATHS ====================
 const SETTINGS_PATH = path.join(__dirname, 'settings.json');
 const CAT_PATH = path.join(__dirname, 'categories.json');
 const DB_PATH = path.join(__dirname, 'products.json');
 const USER_PATH = path.join(__dirname, 'users.json');
 const ORDER_PATH = path.join(__dirname, 'orders.json');
-const serviceAccount = require('./e-commerce-shop-site-firebase-adminsdk-fbsvc-6436ab9877.json');
+
+// ==================== HELPER FUNCTIONS ====================
 const readData = (file) => {
     if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify([]));
     return JSON.parse(fs.readFileSync(file));
 };
 const writeData = (file, data) => fs.writeFileSync(file, JSON.stringify(data, null, 2));
 
-// Email transporter
+// ==================== NODEMAILER TRANSPORTER ====================
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -53,7 +44,6 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS
     }
 });
-
 const otpStore = {};
 
 // ==================== USER ROUTES ====================
@@ -359,14 +349,11 @@ app.post('/update-profile', (req, res) => {
     let { currentEmail, currentPassword, newEmail, newPassword, profilePicture, defaultAddress, defaultPhone, name } = req.body;
     
     if (currentEmail) currentEmail = currentEmail.toLowerCase().trim();
-    console.log('Update profile requested for email:', currentEmail);
     
     let users = readData(USER_PATH);
     const userIndex = users.findIndex(u => u.email === currentEmail);
-    console.log('User index found:', userIndex);
     
     if (userIndex === -1) {
-        console.log('User not found!');
         return res.status(404).json({ success: false, message: "User not found." });
     }
 
@@ -436,13 +423,11 @@ app.post('/phone-login', (req, res) => {
 app.post('/google-login', (req, res) => {
     let { email, name } = req.body;
     email = email.toLowerCase().trim();
-    console.log('Google login attempt for email:', email);
 
     let users = readData(USER_PATH);
     let user = users.find(u => u.email === email);
     
     if (!user) {
-        console.log('User not found, creating new user');
         const role = (email === "sabbirmolla801@gmail.com") ? "admin" : "user";
         const newUser = {
             name,
@@ -460,7 +445,6 @@ app.post('/google-login', (req, res) => {
         writeData(USER_PATH, users);
         user = newUser;
     } else {
-        console.log('User found, updating login count');
         user.loginCount = (user.loginCount || 0) + 1;
         user.lastLogin = new Date().toISOString();
         writeData(USER_PATH, users);
@@ -471,24 +455,15 @@ app.post('/google-login', (req, res) => {
 });
 
 // ==================== UPLOAD to Firebase Storage ====================
-const upload = multer({ storage: multer.memoryStorage() });
-
 app.post('/upload', upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-    if (!bucket) return res.status(500).json({ success: false, message: 'Firebase Storage not configured' });
 
     try {
         const fileName = `products/${Date.now()}_${req.file.originalname}`;
         const file = bucket.file(fileName);
-
-        await file.save(req.file.buffer, {
-            metadata: { contentType: req.file.mimetype }
-        });
-
+        await file.save(req.file.buffer, { metadata: { contentType: req.file.mimetype } });
         await file.makePublic();
-
         const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-
         res.json({ success: true, imageUrl: publicUrl });
     } catch (error) {
         console.error('Firebase upload error:', error);
@@ -496,7 +471,6 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     }
 });
 
-// ==================== SERVER ====================
+// ==================== SERVER START ====================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
