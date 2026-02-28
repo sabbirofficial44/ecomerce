@@ -455,22 +455,45 @@ app.post('/google-login', (req, res) => {
 });
 
 // ==================== UPLOAD to Firebase Storage ====================
+// ==================== UPLOAD to FreeImage.host ====================
 app.post('/upload', upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
 
     try {
-        const fileName = `products/${Date.now()}_${req.file.originalname}`;
-        const file = bucket.file(fileName);
-        await file.save(req.file.buffer, { metadata: { contentType: req.file.mimetype } });
-        await file.makePublic();
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-        res.json({ success: true, imageUrl: publicUrl });
+        const formData = new FormData();
+        formData.append('key', process.env.FREEIMAGE_API_KEY);  // এনভায়রনমেন্ট ভেরিয়েবল থেকে API কী নেওয়া
+        formData.append('source', req.file.buffer, {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype
+        });
+        formData.append('format', 'json');  // JSON রেসপন্স চাই
+
+        const response = await fetch('https://freeimage.host/api/1/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        if (result && result.status_code === 200) {
+            // FreeImage.host-এ ছবির URL সাধারণত result.image.url বা result.image.image.url-এ থাকে
+            const imageUrl = result.image?.url || result.image?.image?.url;
+            if (imageUrl) {
+                res.json({ success: true, imageUrl });
+            } else {
+                console.error('Invalid response structure:', result);
+                res.status(500).json({ success: false, message: 'Image URL not found in response' });
+            }
+        } else {
+            console.error('FreeImage.host upload failed:', result);
+            res.status(500).json({ success: false, message: 'Image upload failed' });
+        }
     } catch (error) {
-        console.error('Firebase upload error:', error);
-        res.status(500).json({ success: false, message: 'Upload failed' });
+        console.error('Upload error:', error);
+        res.status(500).json({ success: false, message: 'Server error during upload' });
     }
 });
 
 // ==================== SERVER START ====================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
