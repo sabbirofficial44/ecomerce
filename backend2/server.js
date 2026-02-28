@@ -522,37 +522,39 @@ app.post('/google-login', async (req, res) => {
 
 // ==================== UPLOAD to ImgBB ====================
 app.post('/upload', upload.single('image'), async (req, res) => {
-    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    console.log('🔑 IMGBB_API_KEY from env:', process.env.IMGBB_API_KEY);
+    console.log('✅ File received:', req.file.originalname, req.file.mimetype, req.file.size);
 
     try {
-        // Convert image buffer to base64
         const base64Image = req.file.buffer.toString('base64');
-
-        console.log('🔑 IMGBB_API_KEY from env:', process.env.IMGBB_API_KEY);
-        console.log('✅ File received:', req.file.originalname, req.file.mimetype, req.file.size);
         console.log('📦 Base64 length:', base64Image.length);
-        console.log('📤 Sending to ImgBB...');
-        console.log('📥 ImgBB response:', result);
 
         const formData = new FormData();
         formData.append('key', process.env.IMGBB_API_KEY);
         formData.append('image', base64Image);
 
+        console.log('📤 Sending to ImgBB...');
         const response = await fetch('https://api.imgbb.com/1/upload', {
             method: 'POST',
             body: formData
         });
+
         const result = await response.json();
+        console.log('📥 ImgBB response:', result);
 
         if (result.success) {
-            res.json({ success: true, imageUrl: result.data.url });
+            return res.json({ success: true, imageUrl: result.data.url });
         } else {
             console.error('ImgBB upload failed:', result);
-            res.status(500).json({ success: false, message: 'Image upload failed' });
+            return res.status(500).json({ success: false, message: 'Image upload failed' });
         }
     } catch (error) {
-        console.error('Upload error:', error);
-        res.status(500).json({ success: false, message: 'Server error during upload' });
+        console.error('🔥 Upload error:', error);
+        return res.status(500).json({ success: false, message: 'Server error during upload' });
     }
 });
 
@@ -560,3 +562,4 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
