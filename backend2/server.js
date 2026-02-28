@@ -521,12 +521,43 @@ app.post('/google-login', async (req, res) => {
 });
 
 // ==================== UPLOAD to ImgBB ====================
-const FormData
+app.post('/upload', upload.single('image'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    try {
+        const base64Image = req.file.buffer.toString('base64');
+        
+        // FormData এর বদলে URLSearchParams ব্যবহার করা অনেক বেশি সেইফ
+        const params = new URLSearchParams(); 
+        params.append('key', process.env.IMGBB_API_KEY.trim());
+        params.append('image', base64Image);
+
+        const response = await fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: params // params পাঠিয়ে দিন
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            return res.json({ success: true, imageUrl: result.data.url });
+        } else {
+            console.error('ImgBB upload failed:', result);
+            return res.status(500).json({ success: false, message: 'Image upload failed' });
+        }
+    } catch (error) {
+        console.error('🔥 Upload error:', error);
+        return res.status(500).json({ success: false, message: 'Server error during upload' });
+    }
+});
 
 // ==================== SERVER START ====================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
 
 
 
