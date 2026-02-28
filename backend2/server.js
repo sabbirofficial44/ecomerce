@@ -533,8 +533,8 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         const base64Image = req.file.buffer.toString('base64');
         console.log('📦 Base64 length:', base64Image.length);
 
-        const apiKey = process.env.IMGBB_API_KEY.trim();
-        formData.append('key', apiKey);
+        const formData = new FormData();   // ← এই লাইনটি অবশ্যই থাকতে হবে
+        formData.append('key', process.env.IMGBB_API_KEY.trim());
         formData.append('image', base64Image);
 
         console.log('📤 Sending to ImgBB...');
@@ -562,5 +562,6 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
 
 
