@@ -4,18 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
-const admin = require('firebase-admin');
-require('dotenv').config();
 const FormData = require('form-data');
 const fetch = require('node-fetch');
-
-// ==================== FIREBASE ADMIN INIT ====================
-const serviceAccount = require('./e-commerce-shop-site-firebase-adminsdk-fbsvc-6436ab9877.json'); // your actual filename
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'e-commerce-shop-site.firebasestorage.app'
-});
-const bucket = admin.storage().bucket();
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -456,6 +447,7 @@ app.post('/google-login', (req, res) => {
     res.json({ success: true, user: safeUser });
 });
 
+// ==================== UPLOAD to FreeImage.host ====================
 app.post('/upload', upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
 
@@ -471,7 +463,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         const response = await fetch('https://freeimage.host/api/1/upload', {
             method: 'POST',
             body: formData,
-            headers: formData.getHeaders() // ← এই লাইনটি জরুরি
+            headers: formData.getHeaders()
         });
 
         const result = await response.json();
@@ -480,7 +472,8 @@ app.post('/upload', upload.single('image'), async (req, res) => {
             if (imageUrl) {
                 res.json({ success: true, imageUrl });
             } else {
-                res.status(500).json({ success: false, message: 'Image URL not found' });
+                console.error('Invalid response structure:', result);
+                res.status(500).json({ success: false, message: 'Image URL not found in response' });
             }
         } else {
             console.error('FreeImage.host upload failed:', result);
@@ -495,5 +488,3 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 // ==================== SERVER START ====================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
