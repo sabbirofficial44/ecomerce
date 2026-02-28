@@ -528,6 +528,12 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         // Convert image buffer to base64
         const base64Image = req.file.buffer.toString('base64');
 
+        console.log('🔑 IMGBB_API_KEY from env:', process.env.IMGBB_API_KEY);
+        console.log('✅ File received:', req.file.originalname, req.file.mimetype, req.file.size);
+        console.log('📦 Base64 length:', base64Image.length);
+        console.log('📤 Sending to ImgBB...');
+        console.log('📥 ImgBB response:', result);
+
         const formData = new FormData();
         formData.append('key', process.env.IMGBB_API_KEY);
         formData.append('image', base64Image);
@@ -552,4 +558,5 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 
 // ==================== SERVER START ====================
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
