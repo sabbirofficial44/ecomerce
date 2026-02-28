@@ -447,36 +447,28 @@ app.post('/google-login', (req, res) => {
     res.json({ success: true, user: safeUser });
 });
 
-// ==================== UPLOAD to FreeImage.host ====================
+// ==================== UPLOAD to ImgBB ====================
 app.post('/upload', upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
 
     try {
-        const formData = new FormData();
-        formData.append('key', process.env.FREEIMAGE_API_KEY);
-        formData.append('source', req.file.buffer, {
-            filename: req.file.originalname,
-            contentType: req.file.mimetype
-        });
-        formData.append('format', 'json');
+        // ImgBB expects the image as base64 string
+        const base64Image = req.file.buffer.toString('base64');
 
-        const response = await fetch('https://freeimage.host/api/1/upload', {
+        const formData = new FormData();
+        formData.append('key', process.env.IMGBB_API_KEY);
+        formData.append('image', base64Image);
+
+        const response = await fetch('https://api.imgbb.com/1/upload', {
             method: 'POST',
-            body: formData,
-            headers: formData.getHeaders()
+            body: formData
         });
 
         const result = await response.json();
-        if (result && result.status_code === 200) {
-            const imageUrl = result.image?.url || result.image?.image?.url;
-            if (imageUrl) {
-                res.json({ success: true, imageUrl });
-            } else {
-                console.error('Invalid response structure:', result);
-                res.status(500).json({ success: false, message: 'Image URL not found in response' });
-            }
+        if (result.success) {
+            res.json({ success: true, imageUrl: result.data.url });
         } else {
-            console.error('FreeImage.host upload failed:', result);
+            console.error('ImgBB upload failed:', result);
             res.status(500).json({ success: false, message: 'Image upload failed' });
         }
     } catch (error) {
