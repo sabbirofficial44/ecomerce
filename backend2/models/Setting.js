@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const settingSchema = new mongoose.Schema({
+
+        categoryMessages: {
+        type: Map,
+        of: String,
+        default: {}
+    },
     // Single document (key‑value store) – we'll keep only one document
     siteName: String,
     logoUrl: String,
